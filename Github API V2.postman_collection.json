@@ -82,7 +82,7 @@
 					],
 					"request": {
 						"auth": {
-							"type": "bearer",
+							"type": "bearer12345",
 							"bearer": [
 								{
 									"key": "token",
