@@ -216,7 +216,7 @@
 					],
 					"request": {
 						"auth": {
-							"type": "bearer",
+							"type": "bearerzdfzgergefgqegetrgq",
 							"bearer": [
 								{
 									"key": "token",
