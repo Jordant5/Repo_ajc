@@ -1,0 +1,451 @@
+{
+	"info": {
+		"_postman_id": "3bcf5894-f4ab-4d8f-b586-6661271a41ba",
+		"name": "Github API V2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24460777"
+	},
+	"item": [
+		{
+			"name": "ManageRepositories",
+			"item": [
+				{
+					"name": "List Repositories for an existing user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Statut 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"let jordan = pm.response.json();",
+									"",
+									"pm.test(\"Le test permet d'afficher le nom utilisateur\", () => {",
+									"    pm.expect(jordan[0].owner.login).is.string(\"Jordant5\")",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/:username/repos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								":username",
+								"repos"
+							],
+							"variable": [
+								{
+									"key": "username",
+									"value": "Jordant5"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a new user already exist",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Le statut du code est 422\", function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"let jsonData = pm.response.json();",
+									"",
+									"pm.test(\"Test pour vérifier que le client est déjà enregistré\", function () {",
+									"pm.expect(jsonData.errors[0].message).to.eql(\"name already exists on this account\");",
+									"});",
+									"",
+									"pm.test(\"Le test inclut le message\", function () {",
+									"pm.expect(jsonData.message).to.include(\"Repository creation failed\");",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "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",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{Repository-name}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/repos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user",
+								"repos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List public repositories",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Statut du code OK 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"let jordan = pm.response.json();",
+									"",
+									"pm.test(\"Test du id OK\", function(){",
+									"    pm.expect(jordan[0].id).is.eql(1);",
+									"});",
+									"",
+									"pm.test(\"Test du node id OK\", function(){",
+									"    pm.expect(jordan[0].node_id).is.eql(\"MDEwOlJlcG9zaXRvcnkx\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/repositories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"repositories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a new repository for the authenticated user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"HTTP response creation repository OK \", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([201,202]);",
+									"});",
+									"",
+									"let jsonData = pm.response.json();",
+									"",
+									"pm.test(\"La création d'une nouvelle repository est OK\", function () {",
+									"    pm.expect(jsonData.name).to.eql(pm.collectionVariables.get(\"Repository-name\"));",
+									"});",
+									"",
+									"var textData = pm.response.text();",
+									"",
+									"pm.test(\"Le texte existe dans le body\", function(){",
+									"    pm.expect(textData).to.include(\"node_id\");",
+									"});",
+									"",
+									"",
+									"/*",
+									"    Ce code est pour récupérer le nom de la repository",
+									"    à partir de la réponse body. Ce n'est pas pour faire un test mais pour récupérer au niveau de la requête suivante",
+									"",
+									"    1. Faire le parse pour inspecter le résultat JSON",
+									"    2. Paramétrer la variable Repository-name",
+									"*/",
+									"",
+									"var jsondata = JSON.parse(responseBody);",
+									"",
+									"console.log(jsondata);",
+									"",
+									"pm.environment.set(\"Repository-name\", jsondata.name);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"",
+									"",
+									"var repositoryName =\"AJC_API-\" + pm.variables.replaceIn(`{{$randomInt}}`)",
+									"",
+									"pm.collectionVariables.set(\"Repository-name\", repositoryName);   ",
+									"",
+									"var repositoryName = \"AJCApi\" + Math.random().toString(30);",
+									"",
+									"pm.collectionVariables.set(\"Repository-name\", repositoryName);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "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",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{Repository-name}}\",\n    \"private\":true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/repos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user",
+								"repos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Repository Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Le changement de la privacy est effectué\", function(){",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.private).to.eql(false);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var randomRepo =\"AJCnew-\" + pm.variables.replaceIn(`{{$randomInt}}`)",
+									"",
+									"pm.collectionVariables.set(\"NewRepoName\", randomRepo);  "
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "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",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"private\": false,\n    \"name\":\"{{NewRepoName}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/repos/:owner/:repo",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"repos",
+								":owner",
+								":repo"
+							],
+							"variable": [
+								{
+									"key": "owner",
+									"value": "Jordant5"
+								},
+								{
+									"key": "repo",
+									"value": "{{Repository-name}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Repository Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "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",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/repos/:owner/:repo",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"repos",
+								":owner",
+								":repo"
+							],
+							"variable": [
+								{
+									"key": "owner",
+									"value": "Jordant5"
+								},
+								{
+									"key": "repo",
+									"value": "{{NewRepoName}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Repository after Delete",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "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",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/vnd.github+json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/user/repos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user",
+								"repos"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "Repository-name",
+			"value": ""
+		},
+		{
+			"key": "NewRepoName",
+			"value": ""
+		}
+	]
+}
